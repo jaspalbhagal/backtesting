@@ -10,17 +10,7 @@ class Settings(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
     
-    # Redis
-    REDIS_URL: str = "redis://localhost:6379"
     
-    # Email
-    SMTP_TLS: bool = True
-    SMTP_PORT: int = 587
-    SMTP_HOST: str = ""
-    SMTP_USER: str = ""
-    SMTP_PASSWORD: str = ""
-    EMAILS_FROM_EMAIL: str = ""
-    REDIS_URL: str = "redis://localhost:6379"
 
     # ✅ Add these
     SECRET_KEY: str
