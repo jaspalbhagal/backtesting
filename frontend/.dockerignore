@@ -1,0 +1,15 @@
+# Ignore node modules (will be installed inside the container)
+node_modules
+
+# Ignore build directory (will be created inside the container)
+build
+
+# Ignore environment variables files
+.env
+
+# Ignore other unnecessary files and directories
+.vscode
+.idea
+.DS_Store
+.git
+.gitignore

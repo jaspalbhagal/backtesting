@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres-db-backtesting
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app_db"]
+      interval: 5s
+
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build:
+      context: backend/
+    container_name: backtesting-migrate
+    command: poetry run alembic upgrade head
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/app_db
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - /backend/alembic:/app/alembic
+      - /backend/alembic.ini:/app/alembic.ini
+      - /backend/app:/app/app # Include app directory for models
+    env_file:
+      - /backend/.env
+
+  web:
+    build:
+      context: backend/
+    container_name: backtesting-web
+    command: poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/app_db
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    command: npm run start
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    working_dir: /app
+    depends_on:
+      - web
+    restart: unless-stopped
+    env_file:
+      - ./frontend/.env
+volumes:
+  postgres_data:
